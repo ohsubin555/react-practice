@@ -1,0 +1,32 @@
+toyproject 수업 정리
+
+GitHub Pages
+- GitHub가 무료로 정적 웹사이트(HTML, CSS, JS 파일)를 올려주는 서비스
+- 주소 형태: https://<GitHub아이디>.github.io/<저장소이름>/
+- React 코드를 그대로 올리는 게 아니라, npm run build로 만든 결과물(dist 폴더)을 올린다
+
+1. vite.config.js 에 base 설정
+   base: '/react-practice/'
+   - 사이트가 도메인 바로 아래가 아니라 /저장소이름/ 아래에 열리기 때문
+   - 저장소 이름과 똑같이 쓰고, 앞뒤에 / 를 붙인다
+   - 안 맞으면 배포 후 흰 화면이 나온다 (JS, CSS 파일 경로를 못 찾음)
+
+2. 라우터는 HashRouter 사용
+   - 주소가 .../#/board 처럼 # 뒤에 경로가 붙는다
+   - BrowserRouter를 쓰면 새로고침하거나 주소로 바로 들어갈 때 404가 나기 쉽다
+     (GitHub Pages 서버에는 /board 같은 실제 파일이 없기 때문)
+
+3. .github/workflows/deploy.yml (GitHub Actions 자동 배포)
+   - main 브랜치에 push 하면 자동으로 빌드 + 배포
+   - 순서: 코드 내려받기(checkout) → Node 준비 → npm ci → npm run build
+           → dist 업로드(upload-pages-artifact) → 배포(deploy-pages)
+   - npm ci: package-lock.json 기준으로 정확히 설치 (자동화 환경에서 주로 사용)
+   - uses = 만들어진 액션 사용 / run = 명령어 실행 / with = 옵션 전달
+
+4. GitHub 저장소 설정
+   - Settings → Pages → Source를 "GitHub Actions"로 선택
+   - push 후 Actions 탭에서 진행 상황 확인, 끝나면 사이트 주소가 표시된다
+
+참고
+- Vite 배포 문서: https://vite.dev/guide/static-deploy.html#github-pages
+- GitHub Pages 문서: https://docs.github.com/ko/pages

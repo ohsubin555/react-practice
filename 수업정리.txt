@@ -1,32 +1,103 @@
-toyproject 수업 정리
+[빌드 & GitHub Pages 배포]
+1. GitHub Pages
+   ㄴ GitHub Pages는 GitHub에 저장한 HTML, CSS, JavaScript 파일을 인터넷에 공개하여 웹사이트로 실행할 수 있게 해주는 무료 호스팅 서비스.
+   GitHub Actions: CI-CD
+2. GitHub 저장소(Repository)에 올리고
+   GitHub Pages를 설정하면 
+   인터넷 주소가 생성
+   예)   https://사용자명.github.io/저장소명/
+         https://k2nik..github.io/react-practice
 
-GitHub Pages
-- GitHub가 무료로 정적 웹사이트(HTML, CSS, JS 파일)를 올려주는 서비스
-- 주소 형태: https://<GitHub아이디>.github.io/<저장소이름>/
-- React 코드를 그대로 올리는 게 아니라, npm run build로 만든 결과물(dist 폴더)을 올린다
+3. GitHub Pages의 동작 과정
+  1) VS Code에서 웹사이트 개발
+     ( HTML · CSS · JavaScript · React ) 
+              ↓
+  2) GitHub 저장소에 업로드:        "react-practice" 저장소 생성        
+     ( 코드를 원격 저장소에 저장 )
+              ↓
+  3) GitHub Pages 배포
+     ( 정적 웹 파일을 웹사이트로 공개 ) 
+              ↓
+  4) 인터넷에서 웹사이트 접속
+     ( Chrome 등 브라우저에서 주소로 접속 )
 
-1. vite.config.js 에 base 설정
+4. npm run build: dist 폴더에 배포할 파일이 생성
+5. 공식 문서: https://docs.github.com/en/pages?utm_source=chatgpt.com
+
+6. "react-practice" 저장소 생성   
+7. 배포 주소 설정. : vite.config.js
    base: '/react-practice/'
-   - 사이트가 도메인 바로 아래가 아니라 /저장소이름/ 아래에 열리기 때문
-   - 저장소 이름과 똑같이 쓰고, 앞뒤에 / 를 붙인다
-   - 안 맞으면 배포 후 흰 화면이 나온다 (JS, CSS 파일 경로를 못 찾음)
+   저장소 이름을 변경: 변경된 저장소 이름으로 base: 값 설정.
+8. Router  설정
+  <BrowserRouter> -> <HashRouter>  수정
+   <Routes>
+        <Route>
+  1) 가장 큰 이유는 URL에 #(해시)를 사용하여 페이지를 구분하고, 서버 설정을 변경하지 않고도 React 페이지 이동을 처리할 수 있기 때문.
+  2) React Router에서 제공하는 라우터 컴포넌트
+  3) GitHub Pages에 React 프로젝트를 배포할 때 유용
+9. 빌드: 
+  1) npm run build
+  2) 빌드가 성공하면:  dist 폴더에 배포할 파일이 생성
+  3) 빌드 성공한 것 미리보기
+     npx vite preview     
+     ➜  Local:   http://localhost:4173/react-practice/
+     ➜  Network: use --host to expose
+     ➜  press h + enter to show help  
 
-2. 라우터는 HashRouter 사용
-   - 주소가 .../#/board 처럼 # 뒤에 경로가 붙는다
-   - BrowserRouter를 쓰면 새로고침하거나 주소로 바로 들어갈 때 404가 나기 쉽다
-     (GitHub Pages 서버에는 /board 같은 실제 파일이 없기 때문)
+10.  GitHub 배포를 위한 Pages 설정
+  1) Settings > Pages > Build and deployment > Source: GitHub Actions로 선택
+  2) VS Code  push -> GitHub: 설치, 빌드, 배포(게시) 실행 설정
+11. GitHub 자동으로 배포 설정: deploy.yml
+  1) 프로젝트 루트에 .github/workflows/deploy.yml
+name: Publish React practice
 
-3. .github/workflows/deploy.yml (GitHub Actions 자동 배포)
-   - main 브랜치에 push 하면 자동으로 빌드 + 배포
-   - 순서: 코드 내려받기(checkout) → Node 준비 → npm ci → npm run build
-           → dist 업로드(upload-pages-artifact) → 배포(deploy-pages)
-   - npm ci: package-lock.json 기준으로 정확히 설치 (자동화 환경에서 주로 사용)
-   - uses = 만들어진 액션 사용 / run = 명령어 실행 / with = 옵션 전달
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
-4. GitHub 저장소 설정
-   - Settings → Pages → Source를 "GitHub Actions"로 선택
-   - push 후 Actions 탭에서 진행 상황 확인, 끝나면 사이트 주소가 표시된다
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-참고
-- Vite 배포 문서: https://vite.dev/guide/static-deploy.html#github-pages
-- GitHub Pages 문서: https://docs.github.com/ko/pages
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+      - name: Publish
+        id: publish
+        uses: actions/deploy-pages@v5
+
+12. GitHub.react-practice 커밋,푸시
+13. .gitignore  확인
+    node_modules
+    dist
+
+14. 커밋 
+  1) git init : 로컬 저장소 생성 
+  2) git add .
+  3) git commit -m "Add React practice and Pages workflow"
+  4) git branch -M main
+  5) git remote add origin https://github.com/jmirace9/react-practice.git
+  6) git push -u origin main
+
+15.Your site is live at https://k2nik.github.io/react-practice/ 
